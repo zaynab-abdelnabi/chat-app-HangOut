@@ -23,7 +23,7 @@ class Contacts extends React.Component {
 
     renderContact = (contact, index) => {
         if(!contact.name.includes(this.state.search)) return;
-        let messages = this.props.messages.filter(e => e.sender === contact.id || e.reciever === contact.id);
+        let messages = this.props.messages.filter(e => e.sender === contact._id || e.receiver === contact._id);
         let lastMessage = messages[messages.length - 1];
         return (
             <div className='w-100' key={index} onClick={this.props.onChatNavigate.bind(this,contact)} >

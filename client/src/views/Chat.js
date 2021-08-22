@@ -24,17 +24,32 @@ class Chat extends React.Component {
             this.setState({ messages, contacts, user, contact });
         });
         socket.on('new_user', this.onNewUser);
+        socket.on('message', this.onNewMessage);
         socket.on('error', err => {
             if (err === 'auth_error') {
                 Auth.logout();
                 this.props.history.push('/login');
             }
         });
+        this.setState({socket});
     }
 
     onNewUser = user => {
         let contacts = this.state.contacts.concat(user);
-        this.setState({contacts});
+        this.setState({ contacts });
+    }
+
+    onNewMessage= message => {
+        let messages = this.state.messages.concat(message);
+        this.setState({ messages });
+    }
+
+    sendMessage = message => {
+        if (!this.state.contact._id) return;
+        message.receiver = this.state.contact._id;
+        let messages = this.state.messages.concat(message);
+        this.setState({ messages });
+        this.state.socket.emit('message', message);
     }
 
     onChatNavigate = contact => {
@@ -60,7 +75,7 @@ class Chat extends React.Component {
                 <div id="messages-section" className="col-6 col-md-8">
                     <ChatHeader contact={this.state.contact} />
                     {this.renderChat()}
-                    <MessageForm />
+                    <MessageForm sender={this.sendMessage} />
                 </div>
             </Row>
         );
@@ -69,7 +84,7 @@ class Chat extends React.Component {
     renderChat = () => {
         const { contact, user } = this.state;
         if (!contact) return;
-        let messages = this.state.messages.filter(e => (e.sender === contact.id && e.recevier === user.id) || (e.recevier === contact.id && e.sender === user.id));
+        let messages = this.state.messages.filter(e => e.sender === contact._id || e.receiver === contact._id);
         return <Messages user={user} messages={messages} />;
     }
 }
