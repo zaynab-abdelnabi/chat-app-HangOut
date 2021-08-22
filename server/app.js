@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const mongoose = require('mongoose');
 const createError = require('http-errors');
+require('./socket-handler');
 
 
 var indexRouter = require('./routes/index');

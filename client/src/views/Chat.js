@@ -1,51 +1,59 @@
-import { ChatHeader, ContactHeader, Contacts, Messages ,MessageForm } from 'components';
+import Auth from 'Auth';
+import { ChatHeader, ContactHeader, Contacts, Messages, MessageForm } from 'components';
 import React from 'react';
-import { Row } from 'reactstrap';
+import { Row, Spinner } from 'reactstrap';
+import socketIO from 'socket.io-client';
 
 class Chat extends React.Component {
 
-    state = {
+    state = {}
 
-        user: { id: "1", name:"ibrahim" },
-        messages: [
-            { sender: "1", recevier: "2", content: "from 1 to 2" },
+    componentDidMount() {
+        this.initSocketConnection();
+    }
 
-            { sender: "3", recevier: "2", content: "from 3 to 2" },
+    initSocketConnection = () => {
 
-            { sender: "3", recevier: "1", content: "from 3 to 1" },
-            
-            { sender: "1", recevier: "2", content: "from 1 to 2" },
-            
-            { sender: "3", recevier: "1", content: "from 3 to 1" },
-            
-            { sender: "1", recevier: "3", content: "from 1 to 3" },
-            
-            { sender: "2", recevier: "1", content: "from 2 to 1" },
-            
-            { sender: "1", recevier: "2", content: "from 1 to 2" },
-            
-            { sender: "3", recevier: "2", content: "from 3 to 2" }
-        ],
-        contacts: [
-            {id:"2", name:"mohammad"},
-            {id:"3", name:"mahmoud"},
-        ],
-        contact: {id:"2", name:"mohammad"},
+        let socket = socketIO(process.env.React_APP_SOCKET, {
+            query: 'token=' + Auth.getToken()
+        });
+        socket.on('connect', () => this.setState({ connected: true }));
+        socket.on('disconnect', () => this.setState({ connected: false }));
+        socket.on('data', (user, contacts, messages) => {
+            let contact = contacts[0] || {};
+            this.setState({ messages, contacts, user, contact });
+        });
+        socket.on('new_user', this.onNewUser);
+        socket.on('error', err => {
+            if (err === 'auth_error') {
+                Auth.logout();
+                this.props.history.push('/login');
+            }
+        });
+    }
+
+    onNewUser = user => {
+        let contacts = this.state.contacts.concat(user);
+        this.setState({contacts});
     }
 
     onChatNavigate = contact => {
-        this.setState({contact});
+        this.setState({ contact });
     }
 
     render() {
-        
+        if (!this.state.connected || !this.state.contacts || !this.state.messages) {
+            return (
+                <Spinner id="loader" color="success" />
+            );
+        }
         return (
             <Row className="h-100">
                 <div id="contacts-section" className="col-6 col-md-4">
                     <ContactHeader />
                     <Contacts
-                        contacts={this.state.contacts} 
-                        messages={this.state.messages} 
+                        contacts={this.state.contacts}
+                        messages={this.state.messages}
                         onChatNavigate={this.onChatNavigate}
                     />
                 </div>
@@ -59,10 +67,10 @@ class Chat extends React.Component {
     }
 
     renderChat = () => {
-        const {contact, user } = this.state;
-        if(!contact) return;
+        const { contact, user } = this.state;
+        if (!contact) return;
         let messages = this.state.messages.filter(e => (e.sender === contact.id && e.recevier === user.id) || (e.recevier === contact.id && e.sender === user.id));
-        return <Messages user={user} messages={messages} /> ;
+        return <Messages user={user} messages={messages} />;
     }
 }
 

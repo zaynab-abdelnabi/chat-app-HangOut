@@ -16,10 +16,19 @@ exports.login = (req, res, next) => {
 
 exports.register = (req, res, next) => {
     let data = { name, username, password } = req.body;
-    User.create(data)
+    User.findOne({ username })
+        .then(user => {
+            if (user) throw createError(422, 'الإسم موجود مسبقاً');
+            return User.create(data);
+        })
         .then(user => {
             res.json(user.signJWT());
+            sendNewUser(user);
         })
         .catch(next);
 }
 
+const sendNewUser = user =>{
+    let data = {name, username, avatar} = user;
+    io.emit('new_user', data);
+}
