@@ -1,9 +1,11 @@
+import moment from 'moment';
 import React from 'react';
 import { Input } from 'reactstrap';
 
 class MessageForm extends React.Component {
     state = {
-        message: ''
+        message: '',
+        lastType:false
     };
 
     onChange = e => this.setState({ message: e.target.value });
@@ -18,10 +20,24 @@ class MessageForm extends React.Component {
         this.setState({ message: '' });
     };
 
+    
+    // send the message with ENTER key
+    //stop typing on send or in 2 sec time between typing
+    onKeyDown = e =>{
+        if(e.key === 'Enter' && !e.shiftKey){
+            this.setState({lastType: false});
+            this.onSend();
+            e.preventDefault();
+        } else if (!this.state.lastType || moment() - this.state.lastType > 2000){
+            this.setState({lastType: moment()});
+            this.props.sendType();
+        }
+    }
+
     render() {
         return (
             <div id="send-message">
-                <Input type="textarea" rows="1" onChange={this.onChange} value={this.state.message} placeholder="أكتب رسالة..." />
+                <Input type="textarea" rows="1" onChange={this.onChange} onKeyDown={this.onKeyDown} value={this.state.message} placeholder="أكتب رسالة..." />
                 <i className="fa fa-send text-muted px-3 send" onClick={this.onSend} />
             </div>
         );

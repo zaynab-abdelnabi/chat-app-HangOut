@@ -6,7 +6,12 @@ import socketIO from 'socket.io-client';
 
 class Chat extends React.Component {
 
-    state = {}
+    state = {
+        contacts: [],
+        contact: {},
+        userProfile: false,
+        profile: false,
+    };
 
     componentDidMount() {
         this.initSocketConnection();
@@ -19,19 +24,23 @@ class Chat extends React.Component {
         });
         socket.on('connect', () => this.setState({ connected: true }));
         socket.on('disconnect', () => this.setState({ connected: false }));
-        socket.on('data', (user, contacts, messages) => {
+        socket.on('data', (user, contacts, messages, users) => {
             let contact = contacts[0] || {};
-            this.setState({ messages, contacts, user, contact });
+            this.setState({ messages, contacts, user, contact }, () => {
+                this.updateUsersState(users);
+            });
         });
         socket.on('new_user', this.onNewUser);
         socket.on('message', this.onNewMessage);
+        socket.on('user_status', this.updateUsersState);
+        socket.on('typing', this.onTypingMessage);
         socket.on('error', err => {
             if (err === 'auth_error') {
                 Auth.logout();
                 this.props.history.push('/login');
             }
         });
-        this.setState({socket});
+        this.setState({ socket });
     }
 
     onNewUser = user => {
@@ -39,10 +48,25 @@ class Chat extends React.Component {
         this.setState({ contacts });
     }
 
-    onNewMessage= message => {
+    onNewMessage = message => {
+        if (message.sender === this.state.contact._id) {
+            this.setState({ typing: false });
+            this.state.socket.emit('seen', this.state.contact._id);
+            message.seen=true;
+        }
         let messages = this.state.messages.concat(message);
         this.setState({ messages });
     }
+
+    onTypingMessage = sender => {
+        if (this.state.contact._id !== sender) return;
+        this.setState({ typing: sender });
+        clearTimeout(this.state.timeout);
+        const timeout = setTimeout(this.typingTimeout, 3000);
+        this.setState({ timeout });
+    }
+
+    typingTimeout = () => this.setState({ typing: false });
 
     sendMessage = message => {
         if (!this.state.contact._id) return;
@@ -52,8 +76,27 @@ class Chat extends React.Component {
         this.state.socket.emit('message', message);
     }
 
+    sendType = () => this.state.socket.emit('typing', this.state.contact._id);
+
+    updateUsersState = users => {
+        let contacts = this.state.contacts;
+        contacts.forEach((element, index) => {
+            if (users[element._id]) contacts[index].status = users[element._id];
+        });
+        this.setState({ contacts });
+        let contact = this.state.contact;
+        if (users[contact.id]) contact.status = users[contact.id];
+        this.setState({ contact });
+    }
+
     onChatNavigate = contact => {
         this.setState({ contact });
+        this.state.socket.emit('seen', contact._id);
+        let messages = this.state.messages;
+        messages.forEach((element, index) => {
+            if(element.sender === contact._id) messages[index].seen = true;
+        })
+        this.setState({messages});
     }
 
     render() {
@@ -73,9 +116,9 @@ class Chat extends React.Component {
                     />
                 </div>
                 <div id="messages-section" className="col-6 col-md-8">
-                    <ChatHeader contact={this.state.contact} />
+                    <ChatHeader contact={this.state.contact} typing={this.state.typing} />
                     {this.renderChat()}
-                    <MessageForm sender={this.sendMessage} />
+                    <MessageForm sender={this.sendMessage} sendType={this.sendType} />
                 </div>
             </Row>
         );
