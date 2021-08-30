@@ -1,8 +1,8 @@
 import React from 'react';
 import Message from './Message';
 
-class Messages extends React.Component{
-    render(){
+class Messages extends React.Component {
+    render() {
         return (
             <div id="messages">
                 {this.props.messages.map((message, index) => this.renderMessage(message, index))}
@@ -12,7 +12,7 @@ class Messages extends React.Component{
 
     renderMessage = (message, index) => {
         message.outgoing = message.receiver !== this.props.user._id;
-        return(
+        return (
             <Message key={index} message={message} />
         );
     }

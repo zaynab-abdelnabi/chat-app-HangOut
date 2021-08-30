@@ -1,7 +1,7 @@
 import React from 'react';
 import Auth from 'Auth';
-import {Avatar} from 'components';
-import {Row, DropdownItem, DropdownMenu, DropdownToggle, Nav, UncontrolledDropdown} from 'reactstrap';
+import { Avatar } from 'components';
+import { Row, DropdownItem, DropdownMenu, DropdownToggle, Nav, UncontrolledDropdown } from 'reactstrap';
 import moment from 'moment';
 
 const ChatHeader = props => {
@@ -13,14 +13,16 @@ const ChatHeader = props => {
     };
 
     const status = () => {
-        if(props.typing) return 'يكتب الآن...';
-        if(props.contact.status === true) return 'متصل الآن';
-        if(props.contact.status) return moment(props.contact.status).fromNow();
+        if (props.typing) return 'يكتب الآن...';
+        if (props.contact.status === true) return 'متصل الآن';
+        if (props.contact.status) return moment(props.contact.status).fromNow();
     }
 
     return (
         <Row className="heading m-0">
-            <Avatar src={props.contact.avatar} />
+            <div onClick={props.toggle}>
+                <Avatar src={props.contact.avatar} />
+            </div>
             <div className="text-right">
                 <div>{props.contact ? props.contact.name : ''}</div>
                 <small>{status()}</small>

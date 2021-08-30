@@ -1,5 +1,5 @@
 import Auth from 'Auth';
-import { ChatHeader, ContactHeader, Contacts, Messages, MessageForm } from 'components';
+import { ChatHeader, ContactHeader, Contacts, Messages, MessageForm, UserProfile, EditProfile } from 'components';
 import React from 'react';
 import { Row, Spinner } from 'reactstrap';
 import socketIO from 'socket.io-client';
@@ -31,6 +31,7 @@ class Chat extends React.Component {
             });
         });
         socket.on('new_user', this.onNewUser);
+        socket.on('update_user', this.onUpdateUser);
         socket.on('message', this.onNewMessage);
         socket.on('user_status', this.updateUsersState);
         socket.on('typing', this.onTypingMessage);
@@ -48,11 +49,28 @@ class Chat extends React.Component {
         this.setState({ contacts });
     }
 
+    onUpdateUser = user => {//pay attention
+        if (this.state.user.id === user.id) {
+            this.setState({ user });
+            Auth.setUser(user);
+            return;
+        }
+        let contacts = this.state.contacts;
+        contacts.forEach((element, index) => {
+            if (element.id === user.id) {
+                contacts[index] = user;
+                contacts[index].status = element.status;
+            }
+        });
+        this.setState({contacts});
+        if(this.state.contact.id === user.id) this.setState({contact:user});
+    }
+
     onNewMessage = message => {
         if (message.sender === this.state.contact._id) {
             this.setState({ typing: false });
             this.state.socket.emit('seen', this.state.contact._id);
-            message.seen=true;
+            message.seen = true;
         }
         let messages = this.state.messages.concat(message);
         this.setState({ messages });
@@ -94,10 +112,15 @@ class Chat extends React.Component {
         this.state.socket.emit('seen', contact._id);
         let messages = this.state.messages;
         messages.forEach((element, index) => {
-            if(element.sender === contact._id) messages[index].seen = true;
+            if (element.sender === contact._id) messages[index].seen = true;
         })
-        this.setState({messages});
+        this.setState({ messages });
     }
+
+    userProfileToggle = () => this.setState({ userProfile: !this.state.userProfile });
+
+    profileToggle = () => this.setState({ profile: !this.state.profile });
+
 
     render() {
         if (!this.state.connected || !this.state.contacts || !this.state.messages) {
@@ -108,15 +131,29 @@ class Chat extends React.Component {
         return (
             <Row className="h-100">
                 <div id="contacts-section" className="col-6 col-md-4">
-                    <ContactHeader />
+                    <ContactHeader user={this.state.user} toggle={this.profileToggle} />
                     <Contacts
                         contacts={this.state.contacts}
                         messages={this.state.messages}
                         onChatNavigate={this.onChatNavigate}
                     />
+                    <UserProfile
+                        contact={this.state.contact}
+                        toggle={this.userProfileToggle}
+                        open={this.state.userProfile}
+                    />
+                    <EditProfile
+                        user={this.state.user}
+                        toggle={this.profileToggle}
+                        open={this.state.profile}
+                    />
                 </div>
                 <div id="messages-section" className="col-6 col-md-8">
-                    <ChatHeader contact={this.state.contact} typing={this.state.typing} />
+                    <ChatHeader
+                        contact={this.state.contact}
+                        typing={this.state.typing}
+                        toggle={this.userProfileToggle}
+                    />
                     {this.renderChat()}
                     <MessageForm sender={this.sendMessage} sendType={this.sendType} />
                 </div>
