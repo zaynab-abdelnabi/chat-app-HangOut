@@ -1,5 +1,6 @@
 import React from 'react';
 import Auth from 'Auth';
+import { withRouter } from 'react-router-dom';
 import { Avatar } from 'components';
 import { Row, DropdownItem, DropdownMenu, DropdownToggle, Nav, UncontrolledDropdown } from 'reactstrap';
 import moment from 'moment';
@@ -33,7 +34,9 @@ const ChatHeader = props => {
                         <i className="fa fa-ellipsis-v" />
                     </DropdownToggle>
                     <DropdownMenu>
-                        <DropdownItem onClick={logout}>تسجيل الخروج</DropdownItem>
+                        <DropdownItem onClick={e => props.history.push('/password')}>تغيير كلمة المرور</DropdownItem>
+                        <DropdownItem divider />
+                        <DropdownItem onClick={logout}>تسجيل خروج</DropdownItem>
                     </DropdownMenu>
                 </UncontrolledDropdown>
             </Nav>
@@ -41,4 +44,4 @@ const ChatHeader = props => {
     );
 }
 
-export default ChatHeader;
+export default withRouter(ChatHeader);

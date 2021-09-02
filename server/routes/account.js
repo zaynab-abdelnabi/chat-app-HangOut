@@ -30,6 +30,7 @@ const upload = multer({
 
 
 router.post('/', [auth.authenticated, upload.single('avatar')], controller.profile);
+router.post('/password', auth.authenticated, controller.password);
 
 
 module.exports = router;

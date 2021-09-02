@@ -7,6 +7,7 @@ import socketIO from 'socket.io-client';
 class Chat extends React.Component {
 
     state = {
+        user:{},
         contacts: [],
         contact: {},
         userProfile: false,

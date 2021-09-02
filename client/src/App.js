@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
 import AppRoute from 'AppRoute';
-import { Chat, Login, NotFound, Register } from 'views';
+import { Chat, Login, NotFound, Register, Password } from 'views';
 import Auth from 'Auth';
 
 class App extends Component {
@@ -17,6 +17,7 @@ class App extends Component {
         <Router>
           <Switch>
             <AppRoute path='/' exact component={Chat} can={Auth.auth} redirect='/login' />
+            <AppRoute path='/password' component={Password} can={Auth.auth} redirect='/login'/>
             <AppRoute path='/register' component={Register} can={Auth.guest} redirect='/'/>
             <AppRoute path='/login' component={Login} can={Auth.guest} redirect='/' />
             <AppRoute component={NotFound} />
