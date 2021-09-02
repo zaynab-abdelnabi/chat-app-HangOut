@@ -7,14 +7,34 @@ import axios from "axios";
 class EditProfile extends React.Component {
     state = {
         name: this.props.user.name,
-        about: this.props.user.about
+        about: this.props.user.about,
+        avatar: this.props.user.avatar,
     };
+
+    constructor(props) {
+        super(props);
+        this.fileUpload = React.createRef();
+    }
+
+    showFileUpload = e => this.fileUpload.current.click();
 
     onChange = e => this.setState({ [e.target.name]: e.target.value, error: null });
 
+    onImageChange = e => {
+        if (e.target.files && e.target.files[0]) {
+            this.setState({
+                image: URL.createObjectURL(e.target.files[0]),
+                avatar: e.target.files[0]
+            });
+        }
+    }
+
     onSubmit = e => {
         e.preventDefault();
-        let data = { name: this.state.name, about: this.state.about }
+        const data = new FormData();
+        data.append('name', this.state.name);
+        data.append('about', this.state.about);
+        if (this.state.avatar) data.append('avatar', this.state.avatar);
         axios.post('/api/account', data)
             .then(this.props.toggle)
             .catch(err => this.setState({
@@ -44,10 +64,11 @@ class EditProfile extends React.Component {
 
                         <Error error={this.state.error} />
 
-                        <div className="text-center">
-                            <Avatar src={this.props.user.avatar} />
+                        <div className="text-center" onClick={this.showFileUpload}>
+                            <Avatar src={this.props.user.avatar} file={this.state.image} />
                         </div>
 
+                        <input type='file' ref={this.fileUpload} onChange={this.onImageChange} className="d-none" />
 
                         <div className="bg-white px-3 py-2">
                             <label className="text-muted d-block">الأسم</label>
@@ -56,7 +77,7 @@ class EditProfile extends React.Component {
 
                         <div className="bg-white px-3 py-2">
                             <label className="text-muted d-block">رسالة الحالة</label>
-                            <input className="d-block w-100" value={this.state.about} name="about" onChange={this.onChange} required autoComplete="off" />
+                            <input className="d-block w-100" value={this.state.about ? this.state.about : 'متاح'} name="about" onChange={this.onChange} required autoComplete="off" />
                         </div>
 
                         <div className="bg-white px-3 py-2">

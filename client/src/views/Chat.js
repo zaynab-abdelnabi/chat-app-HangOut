@@ -49,7 +49,7 @@ class Chat extends React.Component {
         this.setState({ contacts });
     }
 
-    onUpdateUser = user => {//pay attention
+    onUpdateUser = user => {
         if (this.state.user.id === user.id) {
             this.setState({ user });
             Auth.setUser(user);
@@ -119,7 +119,9 @@ class Chat extends React.Component {
 
     userProfileToggle = () => this.setState({ userProfile: !this.state.userProfile });
 
-    profileToggle = () => this.setState({ profile: !this.state.profile });
+    profileToggle = () => {
+        this.setState({ profile: !this.state.profile });
+    }
 
 
     render() {
