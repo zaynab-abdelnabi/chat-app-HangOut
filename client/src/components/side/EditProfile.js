@@ -1,4 +1,5 @@
 import React from "react";
+import { withRouter } from "react-router-dom";
 import { Row, Form, Button } from 'reactstrap';
 import Error from 'components/Error';
 import { Avatar } from "components";
@@ -36,10 +37,11 @@ class EditProfile extends React.Component {
         data.append('about', this.state.about);
         if (this.state.avatar) data.append('avatar', this.state.avatar);
         axios.post('/api/account', data)
-            .then(this.props.toggle)
-            .catch(err => this.setState({
-                error: err.response.data.message
-            }));
+            .then(res => {
+                this.props.toggle();
+                window.location.reload();
+            })
+            .catch(err => console.log(err));
     };
 
     onClose = e => {
@@ -94,4 +96,4 @@ class EditProfile extends React.Component {
 
 }
 
-export default EditProfile;
+export default withRouter(EditProfile);
